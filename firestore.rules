@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /folders/{folder} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'malilens@mali.com';
+    }
+    match /photos/{photo} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'malilens@mali.com';
+    }
+  }
+}
