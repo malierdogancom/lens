@@ -1,0 +1,58 @@
+name: Firebase Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  # PR: deploy to a preview channel via the Firebase action
+  deploy_preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PORTFOLIO_MALI_ERDOGAN }}
+          projectId: portfolio-mali-erdogan
+          target: lens
+
+  # main push: full deploy (hosting + functions) via firebase-tools CLI
+  deploy_live:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PORTFOLIO_MALI_ERDOGAN }}
+        run: |
+          echo "$FIREBASE_KEY" > firebase_credentials.json
+          export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/firebase_credentials.json"
+          firebase deploy --only hosting --project portfolio-mali-erdogan --non-interactive
+          rm firebase_credentials.json

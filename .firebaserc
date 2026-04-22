@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "portfolio-mali-erdogan"
+  },
+  "targets": {
+    "portfolio-mali-erdogan": {
+      "hosting": {
+        "lens": [
+          "portfolio-malilens"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
