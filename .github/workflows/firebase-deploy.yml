@@ -35,27 +35,35 @@ jobs:
 
   # main push: full deploy (hosting + functions) via firebase-tools CLI
   deploy_live:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 20
+            cache: npm
 
-      - run: npm ci
+        - run: npm ci
 
-      - run: npm install -g firebase-tools
+        - run: npm install -g firebase-tools
 
-      - name: Deploy to Firebase
-        env:
-          FIREBASE_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PORTFOLIO_MALI_ERDOGAN }}
-          NEXT_PUBLIC_BUILD_DATE: ${{ github.event.head_commit.timestamp }}
-        run: |
-          echo "$FIREBASE_KEY" > firebase_credentials.json
-          export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/firebase_credentials.json"
-          firebase experiments:enable webframeworks
-          firebase deploy --only hosting --project portfolio-mali-erdogan --non-interactive
-          rm firebase_credentials.json
+        - name: Deploy to Firebase
+          env:
+            FIREBASE_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PORTFOLIO_MALI_ERDOGAN }}
+            NEXT_PUBLIC_BUILD_DATE: ${{ github.event.head_commit.timestamp }}
+          run: |
+            # 1. Her ihtimale karşı lokal cache'i temizle
+            rm -rf .firebase
+            
+            # 2. Key dosyasını oluştur
+            echo "$FIREBASE_KEY" > firebase_credentials.json
+            export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/firebase_credentials.json"
+            
+            # 3. Deney özelliği aktif et ve deploy et
+            firebase experiments:enable webframeworks
+            # FORCE flag'i yoktur ama temiz bir başlangıç için her şeyi kapsayalım
+            firebase deploy --project portfolio-mali-erdogan --non-interactive
+            
+            rm firebase_credentials.json
