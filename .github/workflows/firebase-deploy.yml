@@ -54,5 +54,6 @@ jobs:
         run: |
           echo "$FIREBASE_KEY" > firebase_credentials.json
           export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/firebase_credentials.json"
+          firebase experiments:enable webframeworks
           firebase deploy --only hosting --project portfolio-mali-erdogan --non-interactive
           rm firebase_credentials.json

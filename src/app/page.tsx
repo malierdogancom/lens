@@ -1,65 +1,95 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import Link from "next/link";
+import { Folder, Lock, Image as ImageIcon } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function HomePage() {
+  const [folders, setFolders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const q = query(collection(db, "folders"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        setFolders(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        console.error("Error fetching folders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFolders();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        <div className="animate-pulse">Loading Gallery...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="min-h-screen bg-black text-white p-8">
+      <header className="mb-12 text-center">
+        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+          Portfolio Gallery
+        </h1>
+        <p className="text-gray-400">Explore my collections</p>
+      </header>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {folders.map((folder, index) => (
+          <Link href={`/folder/${folder.id}`} key={folder.id}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-gray-600 transition-all cursor-pointer"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              {/* Cover Image Placeholder or Actual Image */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+
+              {folder.coverImage ? (
+                <img
+                  src={folder.coverImage}
+                  alt={folder.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800 group-hover:bg-gray-700 transition-colors">
+                  <ImageIcon className="w-12 h-12 text-gray-600" />
+                </div>
+              )}
+
+              <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-blue-400">
+                    <Folder className="w-4 h-4" />
+                    <span className="text-xs uppercase tracking-wider font-semibold">
+                      Collection
+                    </span>
+                  </div>
+                  {folder.type === "private" && (
+                    <div className="bg-black/50 backdrop-blur-md p-2 rounded-full">
+                      <Lock className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
+                  {folder.name}
+                </h3>
+              </div>
+            </motion.div>
+          </Link>
+        ))}
+      </div>
+    </main>
   );
 }
