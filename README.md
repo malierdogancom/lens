@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lens — lens.malierdogan.com
 
-## Getting Started
+A private photo gallery for sharing high-quality photos with friends and family.
 
-First, run the development server:
+## What It Does
+
+- **Gallery:** Browse photo collections organized into folders (albums)
+- **Public & Private Folders:** Public folders are open to anyone; private folders require a password to view
+- **Admin Panel:** Upload photos in original quality, create/manage folders, delete or move photos
+- **EXIF Data:** Camera metadata (make, model, ISO, aperture, shutter speed) is extracted and stored on upload
+- **Easy Download:** Visitors can download individual photos or bulk-download a folder as a ZIP
+
+## Why It Was Built
+
+A personal alternative to Google Drive or shared albums — upload photos at full resolution, organize them into named folders, and share a link with friends. They can browse and download without needing a Google account or dealing with Drive's compression.
+
+## Tech Stack
+
+- **Framework:** Next.js 14 (Firebase Frameworks — serverless, NOT static export)
+- **Styling:** Tailwind CSS 4
+- **Backend:** Firebase Firestore + Cloud Storage + Authentication (email/password)
+- **Hosting:** Firebase Hosting + Cloud Functions (target: `portfolio-malilens`)
+
+## Authentication
+
+Admin access is restricted to a single whitelisted email (`malilens@mali.com`). Login at `/login`. Public visitors can browse public folders and view/download photos without an account. Private folders require a password set by the admin.
+
+## Deployment
+
+Push to `main` → GitHub Actions deploys to Firebase (hosting + serverless functions). PRs get a preview channel URL.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev    # local development (Node 20 required)
+firebase deploy --only hosting --project portfolio-mali-erdogan  # manual deploy
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> Note: This site uses Firebase Frameworks (serverless Next.js). The build is handled by Firebase during deploy, not by `npm run build` directly.

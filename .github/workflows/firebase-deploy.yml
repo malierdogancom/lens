@@ -51,6 +51,7 @@ jobs:
       - name: Deploy to Firebase
         env:
           FIREBASE_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PORTFOLIO_MALI_ERDOGAN }}
+          NEXT_PUBLIC_BUILD_DATE: ${{ github.event.head_commit.timestamp }}
         run: |
           echo "$FIREBASE_KEY" > firebase_credentials.json
           export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/firebase_credentials.json"

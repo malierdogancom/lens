@@ -7,6 +7,10 @@ import Link from "next/link";
 import { Folder, Lock, Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
+const buildDate = process.env.NEXT_PUBLIC_BUILD_DATE
+  ? new Date(process.env.NEXT_PUBLIC_BUILD_DATE).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null;
+
 export default function HomePage() {
   const [folders, setFolders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +46,7 @@ export default function HomePage() {
           Portfolio Gallery
         </h1>
         <p className="text-gray-400">Explore my collections</p>
+        {buildDate && <p className="text-xs text-gray-600 mt-2">Last updated: {buildDate}</p>}
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
