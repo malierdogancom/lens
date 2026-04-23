@@ -4,7 +4,8 @@
     "indexes": "firestore.indexes.json"
   },
   "storage": {
-    "bucket": "portfolio-mali-erdogan.firebasestorage.app"
+    "bucket": "portfolio-mali-erdogan.firebasestorage.app",
+    "rules": "storage.rules"
   },
   "hosting": {
     "site": "portfolio-malilens",
