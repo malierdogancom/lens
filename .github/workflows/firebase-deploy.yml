@@ -55,4 +55,4 @@ jobs:
             NEXT_PUBLIC_BUILD_DATE: ${{ github.event.head_commit.timestamp }}
           run: |
             firebase experiments:enable webframeworks
-            firebase deploy --project portfolio-mali-erdogan --non-interactive
+            firebase deploy --project portfolio-mali-erdogan --non-interactive --force
