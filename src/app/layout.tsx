@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Portfolio Lens",
-  description: "A professional photo gallery",
+  title: "Lens — Mali Erdoğan Photography",
+  description: "Photo portfolio of Mehmet Ali Erdoğan.",
 };
 
 export default function RootLayout({
