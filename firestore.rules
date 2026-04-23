@@ -9,5 +9,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.email == 'malilens@mali.com';
     }
+    // Portfolio contact form — public write, no read
+    match /messages/{message} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
   }
 }
