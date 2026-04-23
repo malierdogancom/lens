@@ -46,7 +46,7 @@ export default function HomePage() {
           Portfolio Gallery
         </h1>
         <p className="text-gray-400">Explore my collections</p>
-        {buildDate && <p className="text-xs text-gray-600 mt-2">Last updated: {buildDate}</p>}
+        {buildDate && <p className="text-xs text-gray-600 mt-2">Son güncelleme: {buildDate}</p>}
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
