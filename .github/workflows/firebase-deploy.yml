@@ -51,19 +51,8 @@ jobs:
 
         - name: Deploy to Firebase
           env:
-            FIREBASE_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PORTFOLIO_MALI_ERDOGAN }}
+            FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
             NEXT_PUBLIC_BUILD_DATE: ${{ github.event.head_commit.timestamp }}
           run: |
-            # 1. Her ihtimale karşı lokal cache'i temizle
-            rm -rf .firebase
-            
-            # 2. Key dosyasını oluştur
-            echo "$FIREBASE_KEY" > firebase_credentials.json
-            export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/firebase_credentials.json"
-            
-            # 3. Deney özelliği aktif et ve deploy et
             firebase experiments:enable webframeworks
-            # FORCE flag'i yoktur ama temiz bir başlangıç için her şeyi kapsayalım
-            firebase deploy --project portfolio-mali-erdogan --non-interactive --debug
-            
-            rm firebase_credentials.json
+            firebase deploy --project portfolio-mali-erdogan --non-interactive
