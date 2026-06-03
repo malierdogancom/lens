@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { Lock, Unlock, ArrowLeft, Download, CheckCircle2, X, MousePointer2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -35,11 +33,10 @@ export default function FolderPage() {
 
     const fetchFolder = async () => {
         try {
-            const docRef = doc(db, "folders", id as string);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const data = docSnap.data();
+            const res = await fetch('/api/folders');
+            const folders = await res.json();
+            const data = folders.find((f: any) => f.id === id);
+            if (data) {
                 setFolder(data);
                 if (data.type === "public") {
                     setLocked(false);
@@ -55,21 +52,21 @@ export default function FolderPage() {
 
     const fetchPhotos = async () => {
         try {
-            const q = query(
-                collection(db, "photos"),
-                where("folderId", "==", id),
-                orderBy("createdAt", "desc")
-            );
-            const snapshot = await getDocs(q);
-            setPhotos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+            const res = await fetch(`/api/photos?folderId=${id}`);
+            setPhotos(await res.json());
         } catch (error) {
             console.error("Error fetching photos:", error);
         }
     };
 
-    const handleUnlock = (e: React.FormEvent) => {
+    const handleUnlock = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (passwordInput === folder.password) {
+        const res = await fetch('/api/folders/unlock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ folderId: id, password: passwordInput }),
+        });
+        if (res.ok) {
             setLocked(false);
             setError("");
             fetchPhotos();

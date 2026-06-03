@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  output: 'standalone',
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'lens.malierdogan.com' }],
+  },
 };
-
 export default nextConfig;

@@ -1,19 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db, storage, auth } from "@/lib/firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import {
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    orderBy,
-    serverTimestamp,
-    where,
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
     Loader2, Upload, Lock, Globe, Plus, Folder, LogOut, ShieldAlert,
     Trash2, Edit2, MoreVertical, Image as ImageIcon, X, Check, Menu, MousePointer2
@@ -29,7 +17,6 @@ export default function AdminPage() {
     const [folders, setFolders] = useState<any[]>([]);
     const [photos, setPhotos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
     const [isAllowed, setIsAllowed] = useState(false);
     const router = useRouter();
 
@@ -53,21 +40,11 @@ export default function AdminPage() {
     const [uploadProgress, setUploadProgress] = useState(0);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (!currentUser) {
-                router.push("/login");
-            } else {
-                setUser(currentUser);
-                if (currentUser.email && ALLOWED_EMAILS.includes(currentUser.email)) {
-                    setIsAllowed(true);
-                    fetchFolders();
-                } else {
-                    setIsAllowed(false);
-                    setLoading(false);
-                }
-            }
+        fetch('/api/auth/me').then(r => {
+            if (!r.ok) { router.push('/login'); return; }
+            setIsAllowed(true);
+            fetchFolders();
         });
-        return () => unsubscribe();
     }, []);
 
     useEffect(() => {
@@ -88,13 +65,8 @@ export default function AdminPage() {
 
     const fetchFolders = async () => {
         try {
-            const q = query(collection(db, "folders"), orderBy("createdAt", "desc"));
-            const querySnapshot = await getDocs(q);
-            const folderList = querySnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setFolders(folderList);
+            const res = await fetch('/api/folders');
+            setFolders(await res.json());
         } catch (error) {
             console.error("Error fetching folders:", error);
         } finally {
@@ -104,13 +76,8 @@ export default function AdminPage() {
 
     const fetchPhotos = async (folderId: string) => {
         try {
-            const q = query(
-                collection(db, "photos"),
-                where("folderId", "==", folderId),
-                orderBy("createdAt", "desc")
-            );
-            const snapshot = await getDocs(q);
-            setPhotos(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const res = await fetch(`/api/photos?folderId=${folderId}`);
+            setPhotos(await res.json());
         } catch (error) {
             console.error("Error fetching photos:", error);
         }
@@ -126,12 +93,10 @@ export default function AdminPage() {
         const password = (form.elements.namedItem("password") as HTMLInputElement)?.value;
 
         try {
-            await addDoc(collection(db, "folders"), {
-                name,
-                type: isPrivate ? "private" : "public",
-                password: isPrivate ? password : null,
-                createdAt: serverTimestamp(),
-                coverImage: null,
+            await fetch('/api/folders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, type: isPrivate ? 'private' : 'public', password: isPrivate ? password : null }),
             });
             setIsCreatingFolder(false);
             fetchFolders();
@@ -195,19 +160,10 @@ export default function AdminPage() {
                     console.log("No EXIF data found");
                 }
 
-                // Upload to Storage
-                const storageRef = ref(storage, `photos/${selectedFolderId}/${Date.now()}-${file.name}`);
-                await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(storageRef);
-
-                // Save to Firestore
-                await addDoc(collection(db, "photos"), {
-                    url,
-                    folderId: selectedFolderId,
-                    name: file.name,
-                    createdAt: serverTimestamp(),
-                    exif: exifData
-                });
+                const formData = new FormData();
+                formData.append('folderId', selectedFolderId);
+                formData.append('files', file);
+                await fetch('/api/photos/upload', { method: 'POST', body: formData });
 
                 completed++;
                 setUploadProgress((completed / files.length) * 100);
@@ -227,7 +183,7 @@ export default function AdminPage() {
     const handleDeletePhoto = async (photo: any) => {
         if (!confirm("Delete this photo?")) return;
         try {
-            await deletePhoto(photo.id, photo.url);
+            await deletePhoto(photo.id);
             fetchPhotos(selectedFolderId!);
         } catch (error) {
             alert("Failed to delete photo");
@@ -239,7 +195,7 @@ export default function AdminPage() {
 
         try {
             const photosToDelete = photos.filter(p => selectedPhotoIds.has(p.id));
-            await Promise.all(photosToDelete.map(p => deletePhoto(p.id, p.url)));
+            await Promise.all(photosToDelete.map(p => deletePhoto(p.id)));
 
             fetchPhotos(selectedFolderId!);
             setIsSelectionMode(false);
@@ -281,7 +237,7 @@ export default function AdminPage() {
             <ShieldAlert className="w-16 h-16 text-red-500" />
             <h1 className="text-2xl font-bold">Access Denied</h1>
             <p className="text-gray-400">You are not authorized to view this page.</p>
-            <button onClick={() => signOut(auth)} className="text-blue-400 hover:underline">Sign Out</button>
+            <button onClick={async () => { await fetch('/api/auth/logout', {method: 'POST'}); router.push('/login'); }} className="text-blue-400 hover:underline">Sign Out</button>
         </div>
     );
 
@@ -368,7 +324,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="p-4 border-t border-gray-800">
-                    <button onClick={() => signOut(auth)} className="flex items-center gap-2 text-gray-400 hover:text-white text-sm w-full">
+                    <button onClick={async () => { await fetch('/api/auth/logout', {method: 'POST'}); router.push('/login'); }} className="flex items-center gap-2 text-gray-400 hover:text-white text-sm w-full">
                         <LogOut className="w-4 h-4" />
                         Sign Out
                     </button>

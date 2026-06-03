@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import Link from "next/link";
 import { Folder, Lock, Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,9 +16,8 @@ export default function HomePage() {
   useEffect(() => {
     const fetchFolders = async () => {
       try {
-        const q = query(collection(db, "folders"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        setFolders(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        const res = await fetch('/api/folders');
+        setFolders(await res.json());
       } catch (error) {
         console.error("Error fetching folders:", error);
       } finally {
